@@ -1,0 +1,120 @@
+CHEMISAFEAI - CHEMICAL SAFETY REFERENCE
+Summary of hazard, exposure, first aid, storage and emergency information compiled from standard GHS classifications and OSHA/NIOSH exposure limits. Always verify with the manufacturer's official Safety Data Sheet (SDS).
+
+==================================================
+CHEMICAL: AMMONIA (NH3)
+==================================================
+CAS number: 7664-41-7
+Hazard class: Toxic and corrosive gas. Flammable gas (limited), gas under pressure.
+Risk level: HIGH
+GHS hazards: Toxic if inhaled. Causes severe skin burns and eye damage. Very toxic to aquatic life. Contains gas under pressure; may explode if heated.
+Hazards of ammonia: inhalation causes coughing, chest tightness and lung damage at high levels. Contact with liquid or concentrated gas causes burns and frostbite. Eye contact can cause permanent damage.
+Exposure limits: OSHA PEL 50 ppm (8-hour average). NIOSH REL 25 ppm (8-hour), 35 ppm short term. IDLH 300 ppm.
+Symptoms of exposure: burning eyes, nose and throat, coughing, shortness of breath, skin burns, and in severe cases fluid in the lungs.
+First aid for ammonia:
+- Inhalation: move the person to fresh air at once. Give oxygen if trained. Call emergency services.
+- Skin contact: remove contaminated clothing and rinse skin with plenty of water for at least 15 minutes.
+- Eye contact: rinse with water for at least 15 minutes, holding eyelids open. Seek medical help immediately.
+- Ingestion: rinse mouth, do not induce vomiting, seek medical help.
+Personal protective equipment: gas-tight chemical goggles, face shield, chemical-resistant gloves and suit, and a respirator or self-contained breathing apparatus for leaks.
+Storage and handling: store in a cool, dry, well-ventilated area away from heat. Keep cylinders upright and secured. Keep away from acids, halogens (chlorine), strong oxidizers and mercury.
+Incompatible materials: acids, chlorine and other halogens, strong oxidizers, mercury, silver and gold compounds.
+Spill and leak response: evacuate the area, ventilate, keep upwind, and stop the leak only if safe. Use water spray to knock down vapor. Do not release into drains.
+Fire response: use water spray, dry chemical or carbon dioxide. Cool cylinders with water from a safe distance.
+
+==================================================
+CHEMICAL: ACETONE (C3H6O)
+==================================================
+CAS number: 67-64-1
+Hazard class: Highly flammable liquid.
+Risk level: MEDIUM
+GHS hazards: Highly flammable liquid and vapor. Causes serious eye irritation. May cause drowsiness or dizziness. Repeated exposure may cause skin dryness or cracking.
+Hazards of acetone: vapors can ignite easily and travel to ignition sources. Flash point about -20 degrees C. Inhalation of high concentrations causes headache, dizziness and drowsiness.
+Exposure limits: OSHA PEL 1000 ppm (8-hour). NIOSH REL 250 ppm (10-hour). IDLH 2500 ppm.
+First aid for acetone:
+- Inhalation: move to fresh air. Seek medical help if symptoms persist.
+- Skin contact: wash with soap and water. Remove contaminated clothing.
+- Eye contact: rinse with water for at least 15 minutes. Seek medical help if irritation continues.
+- Ingestion: rinse mouth, do not induce vomiting, seek medical help.
+Personal protective equipment: safety goggles, butyl rubber or nitrile gloves (check breakthrough time), lab coat, good ventilation.
+Storage and handling: keep container tightly closed in a cool, well-ventilated place away from heat, sparks and open flames. Ground and bond containers when transferring. Use non-sparking tools.
+Incompatible materials: strong oxidizers, strong acids, chloroform, hydrogen peroxide, nitric acid.
+Spill response: remove all ignition sources, ventilate, absorb with inert material, collect in a sealed container.
+Fire response: use alcohol-resistant foam, dry chemical or carbon dioxide. Water spray may be ineffective but cools containers.
+
+==================================================
+CHEMICAL: CHLORINE (Cl2)
+==================================================
+CAS number: 7782-50-5
+Hazard class: Toxic oxidizing gas.
+Risk level: HIGH
+GHS hazards: May intensify fire (oxidizer). Gas under pressure. Fatal if inhaled. Causes skin and serious eye irritation. May cause respiratory irritation. Very toxic to aquatic life.
+Hazards of chlorine: greenish-yellow gas with a sharp odor. Inhalation causes severe respiratory irritation, coughing, chest pain and fluid in the lungs. Liquid chlorine causes burns and frostbite.
+Exposure limits: OSHA PEL ceiling 1 ppm. NIOSH REL ceiling 0.5 ppm (15 minutes). IDLH 10 ppm.
+First aid for chlorine:
+- Inhalation: move to fresh air immediately. Keep the person warm and at rest. Call emergency services. Give oxygen if trained.
+- Skin contact: rinse with plenty of water for at least 15 minutes. Remove contaminated clothing.
+- Eye contact: rinse with water for at least 15 minutes. Seek medical help immediately.
+Personal protective equipment: self-contained breathing apparatus or full-face respirator with chlorine cartridges, chemical-resistant suit, gloves and boots, goggles.
+Storage and handling: store cylinders upright, secured, in a cool, dry, ventilated area, away from flammables, oils and grease. Keep valve caps on. Use corrosion-resistant equipment.
+Incompatible materials: ammonia, hydrogen, hydrocarbons, turpentine, finely divided metals, flammable materials.
+Leak response: evacuate immediately, go upwind and uphill, isolate the area. Only trained responders with breathing apparatus should stop a leak. Use water fog to absorb gas.
+Fire response: chlorine does not burn but supports fire. Use extinguishing media suitable for surrounding fire. Cool cylinders with water from a distance.
+
+==================================================
+CHEMICAL: SULFURIC ACID (H2SO4)
+==================================================
+CAS number: 7664-93-9
+Hazard class: Corrosive acid.
+Risk level: HIGH
+GHS hazards: Causes severe skin burns and eye damage. May be corrosive to metals. Reacts violently with water.
+Hazards of sulfuric acid: concentrated acid causes deep chemical burns. Reaction with water releases a large amount of heat and can cause splashing. Mist irritates the respiratory tract.
+Exposure limits: OSHA PEL 1 mg/m3 (8-hour). NIOSH REL 1 mg/m3. IDLH 15 mg/m3.
+First aid for sulfuric acid:
+- Skin contact: remove contaminated clothing and flush skin with water for at least 15 minutes. Seek medical help.
+- Eye contact: rinse with water for at least 15 minutes, holding eyelids open. Seek medical help immediately.
+- Inhalation: move to fresh air. Seek medical help.
+- Ingestion: rinse mouth, do not induce vomiting, drink water if conscious, seek medical help immediately.
+Personal protective equipment: acid-resistant gloves, apron or suit, face shield and chemical goggles, acid-resistant boots, respirator if mist is present.
+Storage and handling: store in acid-resistant containers in a cool, dry, ventilated area. Always add acid slowly to water, never water to acid. Keep away from bases, organic materials and metals.
+Incompatible materials: water (violent reaction), bases, organic materials, strong oxidizers, metals (releases flammable hydrogen gas).
+Spill response: evacuate area, contain spill, neutralize carefully with sodium bicarbonate or lime, then collect. Do not add water directly to concentrated acid.
+Fire response: acid does not burn. Use media suitable for surrounding fire. Avoid water on acid directly.
+
+==================================================
+CHEMICAL: ETHANOL (C2H6O)
+==================================================
+CAS number: 64-17-5
+Hazard class: Highly flammable liquid.
+Risk level: MEDIUM
+GHS hazards: Highly flammable liquid and vapor. Causes serious eye irritation.
+Hazards of ethanol: vapors form explosive mixtures with air. Flash point about 13 degrees C. Inhalation of high vapor levels causes dizziness and drowsiness.
+Exposure limits: OSHA PEL 1000 ppm (8-hour). NIOSH REL 1000 ppm (10-hour). IDLH 3300 ppm.
+First aid for ethanol:
+- Inhalation: move to fresh air.
+- Skin contact: wash with soap and water.
+- Eye contact: rinse with water for at least 15 minutes. Seek medical help if irritation persists.
+- Ingestion: rinse mouth and seek medical help.
+Personal protective equipment: safety goggles, nitrile gloves, lab coat, adequate ventilation.
+Storage and handling: keep container tightly closed in a cool, well-ventilated place away from heat, sparks and open flames. Ground containers during transfer.
+Incompatible materials: strong oxidizers, strong acids, alkali metals, peroxides.
+Spill response: remove ignition sources, ventilate, absorb with inert material and collect in a sealed container.
+Fire response: use alcohol-resistant foam, dry chemical or carbon dioxide.
+
+==================================================
+CHEMICAL: SODIUM CHLORIDE (NaCl)
+==================================================
+CAS number: 7647-14-5
+Hazard class: Not classified as hazardous under GHS.
+Risk level: LOW
+Hazards of sodium chloride: generally low hazard. Dust may cause mild eye or respiratory irritation.
+First aid for sodium chloride: rinse eyes or skin with water if irritated. Move to fresh air if dust is inhaled. Drink water if ingested in large quantity and seek advice if unwell.
+Personal protective equipment: safety glasses and gloves for dusty handling.
+Storage and handling: store in a dry, closed container. Keep away from moisture.
+Incompatible materials: strong oxidizers, bromine trifluoride, lithium.
+Spill response: sweep up and dispose of as normal waste.
+
+==================================================
+GENERAL EMERGENCY GUIDANCE
+==================================================
+In any chemical exposure emergency: move away from the source, call local emergency services, and give the chemical name to responders. Do not delay first aid. Rinse skin and eyes with water for at least 15 minutes unless the chemical reacts violently with water. Always consult the official Safety Data Sheet and a qualified safety professional.

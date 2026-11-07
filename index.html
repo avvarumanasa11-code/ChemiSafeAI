@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChemSafeAI - Industrial Chemical Leakage Emergency Management</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#0284c7',
+              cyan: '#06b6d4',
+              green: '#10b981',
+              red: '#ef4444',
+              amber: '#f59e0b',
+              dark: '#090d16',
+              panel: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Leaflet CSS & JS for Real-World GIS Tactical Mapping -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="bg-[#090d16] text-slate-100 min-h-screen flex flex-col font-sans selection:bg-sky-500 selection:text-white">
+
+  <!-- ================= TOP EMERGENCY STROBE / NOTICE BANNER ================= -->
+  <div id="emergencySirenBanner" class="hidden transition-all duration-300"></div>
+
+  <!-- ================= MASTER HEADER & NAVIGATION ================= -->
+  <header class="sticky top-0 z-40 bg-[#0f172a]/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo & Branding -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-emerald-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20 ring-1 ring-white/20">
+            <i data-lucide="shield-alert" class="w-6 h-6 text-white"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl font-black tracking-tight text-white">ChemSafe<span class="text-sky-400">AI</span></span>
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/30 font-mono font-semibold">v2.4 EOC</span>
+            </div>
+            <p class="text-[11px] text-slate-400 hidden sm:block">Industrial Chemical Emergency & Plume Dispersion Ops</p>
+          </div>
+        </div>
+
+        <!-- Simulation Quick-Controls (Top Bar) -->
+        <div class="hidden xl:flex items-center gap-2 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+          <span class="text-[11px] text-slate-400 px-2 font-medium flex items-center gap-1">
+            <i data-lucide="sliders" class="w-3.5 h-3.5 text-sky-400"></i> Simulator:
+          </span>
+          <button id="btnScenarioNormal" class="px-2.5 py-1 text-xs rounded-lg font-semibold bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-700/60 transition-all flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Normal
+          </button>
+          <button id="btnScenarioWarning" class="px-2.5 py-1 text-xs rounded-lg font-semibold bg-amber-950/60 hover:bg-amber-900/80 text-amber-300 border border-amber-700/60 transition-all flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span> Minor (NH₃)
+          </button>
+          <button id="btnScenarioCritical" class="px-2.5 py-1 text-xs rounded-lg font-semibold bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-700/60 transition-all flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span> Critical (Cl₂)
+          </button>
+        </div>
+
+        <!-- Master Status Badge & SOS / Sound Controls -->
+        <div class="flex items-center gap-2.5">
+          
+          <!-- Sound Toggle -->
+          <button class="btn-toggle-sound px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-300 flex items-center gap-1.5 transition-all text-xs" title="Toggle audio sirens">
+            <i data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
+            <span class="hidden sm:inline text-xs text-emerald-400">Audio On</span>
+          </button>
+
+          <!-- Current Global Indicator -->
+          <div id="masterStatusBadge" class="indicator-pill indicator-green hidden md:inline-flex">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span> SECURE
+          </div>
+
+          <!-- ONE-CLICK SOS BUTTON -->
+          <button class="btn-trigger-sos group relative px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black tracking-wider text-sm flex items-center gap-2 shadow-lg shadow-red-600/30 transition-all transform active:scale-95 animate-emergency-pulse border border-red-400/50">
+            <i data-lucide="flame" class="w-5 h-5 text-white animate-bounce"></i>
+            <span>SOS EMERGENCY</span>
+          </button>
+
+          <!-- Mobile Menu Hamburger -->
+          <button id="mobileMenuBtn" class="p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white md:hidden">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs (Desktop) -->
+      <nav class="hidden md:flex items-center space-x-1 border-t border-slate-800/80 py-2 overflow-x-auto text-sm">
+        <button data-nav-target="dashboard" class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 bg-slate-800 text-sky-400 border border-sky-500">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+        </button>
+        <button data-nav-target="before" class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> Before Leakage (Prevention)
+        </button>
+        <button data-nav-target="during" class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent">
+          <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-400"></i> During Leakage (Crisis)
+        </button>
+        <button data-nav-target="after" class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent">
+          <i data-lucide="rotate-ccw" class="w-4 h-4 text-sky-400"></i> After Leakage (Recovery)
+        </button>
+        <button data-nav-target="map" class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent">
+          <i data-lucide="map-pin" class="w-4 h-4 text-amber-400"></i> Response Map & Plume
+        </button>
+        <button data-nav-target="chemicals" class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent">
+          <i data-lucide="flask-conical" class="w-4 h-4 text-purple-400"></i> Chemical Database
+        </button>
+        <button data-nav-target="ai-copilot" class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent">
+          <i data-lucide="bot" class="w-4 h-4 text-cyan-400"></i> AI Copilot
+        </button>
+        <button data-nav-target="contacts" class="px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-transparent">
+          <i data-lucide="phone-call" class="w-4 h-4 text-red-400"></i> Emergency Contacts
+        </button>
+      </nav>
+
+      <!-- Mobile Navigation Drawer -->
+      <div id="mobileNavMenu" class="hidden md:hidden border-t border-slate-800 py-3 space-y-1">
+        <button data-nav-target="dashboard" class="w-full text-left px-3 py-2 rounded-lg text-sm text-sky-400 bg-slate-800 font-semibold flex items-center gap-2">
+          <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Dashboard
+        </button>
+        <button data-nav-target="before" class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i> Before Leakage (Prevention)
+        </button>
+        <button data-nav-target="during" class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+          <i data-lucide="alert-octagon" class="w-4 h-4 text-rose-400"></i> During Leakage (Crisis)
+        </button>
+        <button data-nav-target="after" class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+          <i data-lucide="rotate-ccw" class="w-4 h-4 text-sky-400"></i> After Leakage (Recovery)
+        </button>
+        <button data-nav-target="map" class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+          <i data-lucide="map-pin" class="w-4 h-4 text-amber-400"></i> Emergency Map
+        </button>
+        <button data-nav-target="chemicals" class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+          <i data-lucide="flask-conical" class="w-4 h-4 text-purple-400"></i> Chemical Database
+        </button>
+        <button data-nav-target="ai-copilot" class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+          <i data-lucide="bot" class="w-4 h-4 text-cyan-400"></i> AI Copilot
+        </button>
+        <button data-nav-target="contacts" class="w-full text-left px-3 py-2 rounded-lg text-sm text-slate-200 hover:bg-slate-800 flex items-center gap-2">
+          <i data-lucide="phone-call" class="w-4 h-4 text-red-400"></i> Emergency Contacts
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT WRAPPER ================= -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ================= SECTION: DASHBOARD ================= -->
+    <section id="section-dashboard" class="app-section space-y-6">
+      
+      <!-- Quick Status & Weather Header -->
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-5 rounded-2xl glass-panel">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h1 class="text-xl sm:text-2xl font-black text-white">Central Operations Center (EOC)</h1>
+          </div>
+          <p id="activeIncidentHeader" class="text-emerald-400 text-sm font-medium mt-1">
+            Current Plant State: Baseline Secure (Continuous Monitoring)
+          </p>
+        </div>
+
+        <!-- Atmospheric & Environmental HUD -->
+        <div class="flex flex-wrap items-center gap-3 bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-xs">
+          <div class="flex items-center gap-2 px-2 border-r border-slate-800">
+            <i data-lucide="wind" class="w-4 h-4 text-sky-400"></i>
+            <div>
+              <span class="text-slate-400 text-[10px]">WIND VECTOR</span>
+              <p class="font-bold text-slate-200">14 km/h <span class="text-sky-400">SE (135°)</span></p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 px-2 border-r border-slate-800">
+            <i data-lucide="thermometer" class="w-4 h-4 text-amber-400"></i>
+            <div>
+              <span class="text-slate-400 text-[10px]">AMBIENT TEMP</span>
+              <p class="font-bold text-slate-200">28°C / 82°F</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 px-2">
+            <i data-lucide="droplets" class="w-4 h-4 text-cyan-400"></i>
+            <div>
+              <span class="text-slate-400 text-[10px]">HUMIDITY</span>
+              <p class="font-bold text-slate-200">64% (Dispersion: Med)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-Time Telemetry Cards (Chlorine, Ammonia, Benzene, H2S) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Chlorine Sensor Card -->
+        <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 transition-all relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">S-101</span>
+                <h3 class="font-bold text-white text-sm">Sector A (Chlorine)</h3>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Chemical: Cl₂ Gas (IDLH: 10 ppm)</p>
+            </div>
+            <span class="indicator-pill indicator-green">Normal</span>
+          </div>
+          <div class="mt-4 flex items-baseline justify-between">
+            <span id="valSensorCl2" class="text-3xl font-black text-white font-mono">0.3 ppm</span>
+            <span class="text-[11px] text-slate-400">PEL Limit: 1.0 ppm</span>
+          </div>
+          <div class="mt-3 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full w-[15%]"></div>
+          </div>
+        </div>
+
+        <!-- Ammonia Sensor Card -->
+        <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 transition-all relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">S-204</span>
+                <h3 class="font-bold text-white text-sm">Sector B (Ammonia)</h3>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Chemical: NH₃ Anhydrous (IDLH: 300)</p>
+            </div>
+            <span class="indicator-pill indicator-green">Normal</span>
+          </div>
+          <div class="mt-4 flex items-baseline justify-between">
+            <span id="valSensorNh3" class="text-3xl font-black text-white font-mono">8.5 ppm</span>
+            <span class="text-[11px] text-slate-400">PEL Limit: 50 ppm</span>
+          </div>
+          <div class="mt-3 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full w-[18%]"></div>
+          </div>
+        </div>
+
+        <!-- Benzene Sensor Card -->
+        <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 transition-all relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">S-309</span>
+                <h3 class="font-bold text-white text-sm">Sector C (Benzene)</h3>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Chemical: C₆H₆ VOC (IDLH: 500)</p>
+            </div>
+            <span class="indicator-pill indicator-green">Normal</span>
+          </div>
+          <div class="mt-4 flex items-baseline justify-between">
+            <span id="valSensorC6h6" class="text-3xl font-black text-white font-mono">0.1 ppm</span>
+            <span class="text-[11px] text-slate-400">PEL Limit: 1.0 ppm</span>
+          </div>
+          <div class="mt-3 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full w-[10%]"></div>
+          </div>
+        </div>
+
+        <!-- Hydrogen Sulfide Sensor Card -->
+        <div class="p-4 rounded-xl border border-slate-800 bg-slate-900/80 hover:border-slate-700 transition-all relative overflow-hidden">
+          <div class="flex items-start justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">S-412</span>
+                <h3 class="font-bold text-white text-sm">Sector D (H₂S)</h3>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1">Chemical: H₂S Sour Gas (IDLH: 100)</p>
+            </div>
+            <span class="indicator-pill indicator-green">Normal</span>
+          </div>
+          <div class="mt-4 flex items-baseline justify-between">
+            <span id="valSensorH2s" class="text-3xl font-black text-white font-mono">1.2 ppm</span>
+            <span class="text-[11px] text-slate-400">PEL Limit: 20 ppm</span>
+          </div>
+          <div class="mt-3 w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full w-[8%]"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Main Dashboard Grid: Map Snapshot + Live Alert Feed & Worker Accountability -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left 2 Cols: Plant Radar & Plume Quick View -->
+        <div class="lg:col-span-2 p-5 rounded-2xl glass-panel space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i data-lucide="map" class="w-5 h-5 text-sky-400"></i>
+              <h2 class="text-base font-bold text-white">Live Plant Map & Downwind Dispersion</h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btnToggleWind" class="px-2.5 py-1 text-xs rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1">
+                <i data-lucide="compass" class="w-3.5 h-3.5 text-sky-400"></i> Shift Wind
+              </button>
+              <button onclick="switchTab('map')" class="px-2.5 py-1 text-xs rounded bg-sky-600 hover:bg-sky-500 text-white font-medium flex items-center gap-1">
+                Full Screen Map <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Canvas Map Container -->
+          <div class="relative w-full rounded-xl overflow-hidden border border-slate-800 shadow-inner">
+            <canvas id="plantMapCanvas" class="w-full h-[320px] block plant-map-canvas"></canvas>
+            <div class="absolute bottom-3 left-3 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-700 text-[11px] text-slate-300 flex items-center gap-4">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Upwind Muster Zone</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Leak Danger Cone</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> Sensor Nodes</span>
+            </div>
+          </div>
+
+          <!-- Phase Quick Jump Navigation Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <div onclick="switchTab('before')" class="cursor-pointer p-3.5 rounded-xl border border-emerald-900/50 bg-emerald-950/20 hover:bg-emerald-950/40 transition-all">
+              <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs">
+                <i data-lucide="check-circle" class="w-4 h-4"></i> Phase 1: BEFORE
+              </div>
+              <p class="text-[11px] text-slate-300 mt-1">Prevention, sensor calibrations, OSHA compliance & PPE check.</p>
+            </div>
+
+            <div onclick="switchTab('during')" class="cursor-pointer p-3.5 rounded-xl border border-red-900/50 bg-red-950/20 hover:bg-red-950/40 transition-all">
+              <div class="flex items-center gap-2 text-red-400 font-bold text-xs">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Phase 2: DURING
+              </div>
+              <p class="text-[11px] text-slate-300 mt-1">Real-time leak containment, sirens, evacuation corridors & EAS.</p>
+            </div>
+
+            <div onclick="switchTab('after')" class="cursor-pointer p-3.5 rounded-xl border border-sky-900/50 bg-sky-950/20 hover:bg-sky-950/40 transition-all">
+              <div class="flex items-center gap-2 text-sky-400 font-bold text-xs">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Phase 3: AFTER
+              </div>
+              <p class="text-[11px] text-slate-300 mt-1">Decontamination, hospital triage, root-cause investigation.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Col: Live Alerts & Worker Accountability Tracker -->
+        <div class="space-y-4">
+          
+          <!-- Worker Accountability Card -->
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="users" class="w-5 h-5 text-emerald-400"></i>
+                <h3 class="text-sm font-bold text-white">Personnel Accountability</h3>
+              </div>
+              <span class="indicator-pill indicator-green">Live Muster</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center pt-1">
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                <span class="text-[10px] text-slate-400 uppercase">Total Shift</span>
+                <p id="headcountTotal" class="text-2xl font-bold text-white">142</p>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                <span class="text-[10px] text-slate-400 uppercase">Muster Safe</span>
+                <p id="headcountEvacuated" class="text-2xl font-bold text-emerald-400">142</p>
+              </div>
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                <span class="text-[10px] text-slate-400 uppercase">In Hazard</span>
+                <p id="headcountAtRisk" class="text-2xl font-bold text-emerald-400">0</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Alert Feed -->
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="bell" class="w-5 h-5 text-amber-400"></i>
+                <h3 class="text-sm font-bold text-white">Live Alert Log</h3>
+              </div>
+              <span class="text-[11px] text-slate-400 font-mono">Real-time Feed</span>
+            </div>
+
+            <div id="alertsFeedContainer" class="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+              <!-- Dynamically populated via app.js -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= SECTION: BEFORE LEAKAGE (PREVENTION) ================= -->
+    <section id="section-before" class="app-section hidden space-y-6">
+      
+      <div class="p-6 rounded-2xl glass-panel glass-panel-glow-green space-y-2">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <i data-lucide="shield-check" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h2 class="text-xl sm:text-2xl font-black text-white">Phase 1: Before Leakage (Preparedness & Risk Mitigation)</h2>
+            <p class="text-sm text-slate-400">Proactive inspection protocols, gas sensor calibrations, community buffer auditing, and OSHA 1910.119 compliance.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Interactive Daily Safety Pre-Shift Checklist -->
+        <div class="lg:col-span-2 p-6 rounded-2xl glass-panel space-y-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="clipboard-check" class="w-5 h-5 text-emerald-400"></i> Mandatory Pre-Shift Inspection Checklist
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5">Automated compliance logging for Shift A (06:00 - 14:00)</p>
+            </div>
+            <div class="text-right">
+              <span id="checklistScoreText" class="text-sm font-black text-emerald-400">100% Ready</span>
+              <div class="w-24 bg-slate-800 h-2 rounded-full mt-1 overflow-hidden">
+                <div id="checklistProgressBar" class="h-2 rounded-full bg-emerald-500 w-full transition-all"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Checklist Items -->
+          <div class="space-y-3">
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+              <input type="checkbox" checked class="checklist-item mt-1 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-700" />
+              <div>
+                <span class="text-sm font-semibold text-slate-200">Chlorine & Ammonia Scrubber Caustic Level Verification</span>
+                <p class="text-xs text-slate-400 mt-0.5">Ensure 15% sodium hydroxide reservoir is full and recirculating pump pressure reads 45-55 PSI.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+              <input type="checkbox" checked class="checklist-item mt-1 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-700" />
+              <div>
+                <span class="text-sm font-semibold text-slate-200">SCBA Cylinder Pressure & Level A Suits Integrity</span>
+                <p class="text-xs text-slate-400 mt-0.5">Confirm all 24 positive-pressure SCBA tanks in Emergency Outposts are charged to 4,500 PSI.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+              <input type="checkbox" checked class="checklist-item mt-1 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-700" />
+              <div>
+                <span class="text-sm font-semibold text-slate-200">Fixed Electrochemical Sensor Optical Calibration (S-101 to S-412)</span>
+                <p class="text-xs text-slate-400 mt-0.5">Zero-drift audit verified within ±0.02 ppm across all toxic gas detectors.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+              <input type="checkbox" checked class="checklist-item mt-1 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-700" />
+              <div>
+                <span class="text-sm font-semibold text-slate-200">Water Deluge & Fog Curtain Nozzle Pressure Test</span>
+                <p class="text-xs text-slate-400 mt-0.5">Test water line flow for Sector B ammonia knockdown curtains (minimum 500 GPM capacity).</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+              <input type="checkbox" checked class="checklist-item mt-1 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-700" />
+              <div>
+                <span class="text-sm font-semibold text-slate-200">Primary & Secondary Upwind Evacuation Route Clearance</span>
+                <p class="text-xs text-slate-400 mt-0.5">All blast-resistant exit gates and turnstiles unobstructed; emergency lighting operational.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 cursor-pointer">
+              <input type="checkbox" checked class="checklist-item mt-1 rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-700" />
+              <div>
+                <span class="text-sm font-semibold text-slate-200">On-Site Infirmary Antidotes & Inhalation Therapy Stock</span>
+                <p class="text-xs text-slate-400 mt-0.5">Verify 50 ampoules of nebulized sodium bicarbonate, oxygen tanks, and eye irrigation fluid.</p>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Right: Chemical Inventory Risk Assessment & PPE Matrix -->
+        <div class="space-y-4">
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="database" class="w-4 h-4 text-sky-400"></i> High-Risk Chemical Storage Inventory
+            </h3>
+            <div class="space-y-2.5 text-xs">
+              <div class="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-white">Tank Farm Cl₂ #1-#4</p>
+                  <p class="text-slate-400">4x 20-ton Liquid Ton Containers</p>
+                </div>
+                <span class="indicator-pill indicator-red">Catastrophic Risk</span>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-white">Ammonia Refrigeration Loop</p>
+                  <p class="text-slate-400">12,000 Gallons Anhydrous NH₃</p>
+                </div>
+                <span class="indicator-pill indicator-amber">High Risk</span>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-slate-900/70 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-white">Benzene Solvent Railcars</p>
+                  <p class="text-slate-400">65,000 Liters Aromatics</p>
+                </div>
+                <span class="indicator-pill indicator-amber">Flammable / Carcinogen</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PPE Hierarchy Guide -->
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="hard-hat" class="w-4 h-4 text-emerald-400"></i> OSHA PPE Level Directive
+            </h3>
+            <div class="space-y-2 text-xs">
+              <div class="p-2 rounded-lg bg-red-950/30 border border-red-900/40">
+                <span class="font-bold text-red-300">Level A (Chlorine / Phosgene / IDLH):</span>
+                <p class="text-slate-300 text-[11px] mt-0.5">Fully encapsulated chemical-vapor suit, positive pressure SCBA, double inner/outer butyl gloves.</p>
+              </div>
+              <div class="p-2 rounded-lg bg-amber-950/30 border border-amber-900/40">
+                <span class="font-bold text-amber-300">Level B (Liquid Splash Hazard):</span>
+                <p class="text-slate-300 text-[11px] mt-0.5">Non-encapsulated hooded chemical splash suit with external SCBA tank.</p>
+              </div>
+              <div class="p-2 rounded-lg bg-sky-950/30 border border-sky-900/40">
+                <span class="font-bold text-sky-300">Level C (Known Sub-IDLH Vapors):</span>
+                <p class="text-slate-300 text-[11px] mt-0.5">Full-face air purifying respirator (APR) with specific gas cartridges (Green for Ammonia).</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= SECTION: DURING LEAKAGE (CRISIS RESPONSE) ================= -->
+    <section id="section-during" class="app-section hidden space-y-6">
+      
+      <div class="p-6 rounded-2xl glass-panel glass-panel-glow-red space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30 animate-pulse">
+              <i data-lucide="alert-octagon" class="w-7 h-7"></i>
+            </div>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-white">Phase 2: During Leakage (Active Crisis & Containment)</h2>
+              <p class="text-sm text-slate-400">Emergency dispatch, automated isolation valves, crosswind evacuation corridors, and EAS community alerts.</p>
+            </div>
+          </div>
+          <button onclick="triggerScenario('critical')" class="hidden sm:flex px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold items-center gap-1.5 shadow-lg">
+            <i data-lucide="zap" class="w-4 h-4"></i> Simulate Rupture Now
+          </button>
+        </div>
+      </div>
+
+      <!-- Incident Commander Action Matrix -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Step 1 & 2 Protocols -->
+        <div class="lg:col-span-2 space-y-4">
+          
+          <!-- Immediate Life Safety Directive -->
+          <div class="p-5 rounded-2xl glass-panel border-l-4 border-l-red-500 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="compass" class="w-5 h-5 text-red-400"></i> Real-Time Evacuation Corridor Calculation
+              </h3>
+              <span class="indicator-pill indicator-red">MANDATORY EVACUATION</span>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              Based on active wind sensor telemetry (<strong class="text-sky-300">14 km/h blowing South-East 135°</strong>) and chemical vapor density (Chlorine = 2.49, heavier than air):
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+              <div class="p-3 bg-red-950/40 rounded-xl border border-red-800/60">
+                <span class="font-bold text-red-300 flex items-center gap-1.5">
+                  <i data-lucide="arrow-up-right" class="w-4 h-4"></i> Evacuation Route: Crosswind North-West
+                </span>
+                <p class="text-slate-300 mt-1">Never run downwind! Move perpendicular to the wind toward <strong class="text-emerald-400">Assembly Zone 1 (Upwind NW Gate)</strong>.</p>
+              </div>
+              <div class="p-3 bg-amber-950/40 rounded-xl border border-amber-800/60">
+                <span class="font-bold text-amber-300 flex items-center gap-1.5">
+                  <i data-lucide="home" class="w-4 h-4"></i> Community Shelter-in-Place Radius
+                </span>
+                <p class="text-slate-300 mt-1">Residential Ward 4 & Greenfield Elementary within 1.6 km must seal doors/windows and turn off all ventilation fans.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Containment Automated Controls -->
+          <div class="p-5 rounded-2xl glass-panel space-y-4">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="cog" class="w-5 h-5 text-sky-400"></i> Automated Plant Isolation & Scrubber Deployment
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold text-white">Emergency Pneumatic Valves (A & B)</p>
+                  <p class="text-[11px] text-slate-400">Closes ton container isolation headers</p>
+                </div>
+                <button onclick="alert('VALVE OVERRIDE: Emergency Pneumatic Isolation Triggered.')" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold">ISOLATE</button>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold text-white">High-Volume Water Fog Nozzles</p>
+                  <p class="text-[11px] text-slate-400">Knocks down ammonia vapor cloud</p>
+                </div>
+                <button onclick="alert('DELUGE SYSTEM: Water Fog Curtains Activated across Sector B.')" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-bold">ACTIVATE</button>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold text-white">Caustic Scrubber Draft Blowers</p>
+                  <p class="text-[11px] text-slate-400">Routes chlorine fumes into NaOH tower</p>
+                </div>
+                <button onclick="alert('SCRUBBER SYSTEM: Caustic Draft Blowers Engaged at 100% capacity.')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold">START 100%</button>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold text-white">Perimeter Automated Blast Gates</p>
+                  <p class="text-[11px] text-slate-400">Prevents vapor ingress into Admin HQ</p>
+                </div>
+                <button onclick="alert('BLAST GATES: Perimeter gates locked in sealed emergency mode.')" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-bold">SEAL HQ</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Public Community Broadcast Tool -->
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="radio" class="w-5 h-5 text-amber-400"></i> Surrounding Community Emergency Broadcast (EAS / SMS)
+              </h3>
+              <span class="indicator-pill indicator-blue">Cell Broadcast Ready</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-mono text-slate-300">
+              [URGENT CIVIL DEFENSE ALERT] A chemical release has occurred at ChemSafe Industrial Sector A. Residents in SE wards must SHELTER IN PLACE immediately. Seal room air gaps. Do NOT travel outdoors. Stand by for emergency sirens.
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] text-slate-400">Target Coverage: 5,400 households within 2 km radius</span>
+              <button onclick="copyAlertMessage(this)" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs flex items-center gap-1.5">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i> Transmit EAS Alert
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Fast Incident Dispatch Status -->
+        <div class="space-y-4">
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="truck" class="w-4 h-4 text-rose-400"></i> Emergency Responders En Route
+            </h3>
+            <div class="space-y-2 text-xs">
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-white">Hazmat Unit 9 (Heavy Decon)</span>
+                  <span class="text-rose-400 font-bold">ETA: 4 mins</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Approaching from Highway 14 North with Level A gear.</p>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-white">Chemical Fire Engine 12</span>
+                  <span class="text-rose-400 font-bold">ETA: 6 mins</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Water tender & fog curtain specialists primed.</p>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-white">St. Jude Trauma & Burns Unit</span>
+                  <span class="text-emerald-400 font-bold">Notified</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Decontamination outdoor showers activated for 20+ victims.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wind & Plume Telemetry Live Mini-HUD -->
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="gauge" class="w-4 h-4 text-cyan-400"></i> Atmospheric Plume Mechanics
+            </h3>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between py-1 border-b border-slate-800">
+                <span class="text-slate-400">Atmospheric Stability:</span>
+                <span class="text-slate-200 font-semibold">Class D (Neutral / Moderate Spread)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800">
+                <span class="text-slate-400">Gas Cloud Elevation:</span>
+                <span class="text-slate-200 font-semibold">Ground-hugging (Vapor Dens: 2.49)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-800">
+                <span class="text-slate-400">IDLH Perimeter Radius:</span>
+                <span class="text-rose-400 font-semibold">500 meters initial</span>
+              </div>
+              <div class="flex justify-between py-1">
+                <span class="text-slate-400">Downwind Toxic Corridor:</span>
+                <span class="text-amber-400 font-semibold">1,600 meters (SE trajectory)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= SECTION: AFTER LEAKAGE (RECOVERY & DECON) ================= -->
+    <section id="section-after" class="app-section hidden space-y-6">
+      
+      <div class="p-6 rounded-2xl glass-panel glass-panel-glow-blue space-y-2">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-xl bg-sky-500/20 text-sky-400 border border-sky-500/30">
+            <i data-lucide="rotate-ccw" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h2 class="text-xl sm:text-2xl font-black text-white">Phase 3: After Leakage (Recovery, Decontamination & Medical Triage)</h2>
+            <p class="text-sm text-slate-400">Chemical neutralization protocols, START medical triage guidelines, safe re-entry air sampling, and AI root-cause report.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Decontamination & Neutralization Protocols -->
+        <div class="lg:col-span-2 space-y-5">
+          
+          <div class="p-6 rounded-2xl glass-panel space-y-4">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="droplet" class="w-5 h-5 text-sky-400"></i> Standard Decontamination Steps for Exposed Personnel
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-300 text-[10px] font-bold">STEP 1: STRIP</span>
+                <h4 class="font-bold text-white text-xs mt-2">Gross Removal</h4>
+                <p class="text-[11px] text-slate-400 mt-1">Carefully remove all clothing from top down (cuts 85-90% of toxic residue). Seal in double hazardous bags.</p>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold">STEP 2: WASH</span>
+                <h4 class="font-bold text-white text-xs mt-2">15-Minute Deluge</h4>
+                <p class="text-[11px] text-slate-400 mt-1">Copious low-pressure lukewarm water shower. Wash hair and open eyes under clean flow for 15+ minutes.</p>
+              </div>
+
+              <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">STEP 3: TRIAGE</span>
+                <h4 class="font-bold text-white text-xs mt-2">Clinical Assessment</h4>
+                <p class="text-[11px] text-slate-400 mt-1">Transport immediately to clean medical tent for pulse oximetry, lung auscultation, and humidified oxygen.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical Triage Chart (START Protocol) -->
+          <div class="p-6 rounded-2xl glass-panel space-y-4">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="heart-pulse" class="w-5 h-5 text-rose-400"></i> Medical Triage Matrix (START Protocol)
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="p-3 rounded-xl border border-red-900/60 bg-red-950/20">
+                <div class="flex items-center gap-2 font-bold text-red-400">
+                  <span class="w-3 h-3 rounded-full bg-red-500"></span> RED: Immediate (Priority 1)
+                </div>
+                <p class="text-slate-300 mt-1.5">Laryngeal spasm, respiratory rate > 30/min, severe cyanosis, capillary refill > 2s. Needs immediate intubation/antidotes.</p>
+              </div>
+
+              <div class="p-3 rounded-xl border border-amber-900/60 bg-amber-950/20">
+                <div class="flex items-center gap-2 font-bold text-amber-400">
+                  <span class="w-3 h-3 rounded-full bg-amber-500"></span> YELLOW: Delayed (Priority 2)
+                </div>
+                <p class="text-slate-300 mt-1.5">Moderate coughing, mild dyspnea, skin burns < 20% BSA. Keep under continuous 24-hr watch for delayed pulmonary edema.</p>
+              </div>
+
+              <div class="p-3 rounded-xl border border-emerald-900/60 bg-emerald-950/20">
+                <div class="flex items-center gap-2 font-bold text-emerald-400">
+                  <span class="w-3 h-3 rounded-full bg-emerald-500"></span> GREEN: Minor (Walking Wounded)
+                </div>
+                <p class="text-slate-300 mt-1.5">Eye/throat irritation only, normal vitals, ambulatory. Wash at eyewash station; provide discharge warnings.</p>
+              </div>
+
+              <div class="p-3 rounded-xl border border-slate-700 bg-slate-900/50">
+                <div class="flex items-center gap-2 font-bold text-slate-400">
+                  <span class="w-3 h-3 rounded-full bg-slate-500"></span> BLACK: Expectant / Deceased
+                </div>
+                <p class="text-slate-400 mt-1.5">No respiration after simple airway maneuver. Move to dignified isolated morgue station.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Safe Re-Entry Air Quality Sampling Thresholds -->
+          <div class="p-6 rounded-2xl glass-panel space-y-3">
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <i data-lucide="check-square" class="w-5 h-5 text-emerald-400"></i> Environmental Clearance Re-Entry Thresholds
+            </h3>
+            <div class="overflow-x-auto text-xs">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-800 text-slate-400">
+                    <th class="py-2">Chemical Agent</th>
+                    <th class="py-2">Mandatory Safe Level</th>
+                    <th class="py-2">Current Reading</th>
+                    <th class="py-2">Clearance Status</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800 text-slate-300">
+                  <tr>
+                    <td class="py-2 font-bold text-white">Chlorine (Cl₂)</td>
+                    <td>&lt; 0.5 ppm</td>
+                    <td class="font-mono">0.3 ppm</td>
+                    <td><span class="indicator-pill indicator-green">Approved For Entry</span></td>
+                  </tr>
+                  <tr>
+                    <td class="py-2 font-bold text-white">Anhydrous Ammonia (NH₃)</td>
+                    <td>&lt; 25 ppm</td>
+                    <td class="font-mono">8.5 ppm</td>
+                    <td><span class="indicator-pill indicator-green">Approved For Entry</span></td>
+                  </tr>
+                  <tr>
+                    <td class="py-2 font-bold text-white">Benzene (C₆H₆)</td>
+                    <td>&lt; 0.5 ppm</td>
+                    <td class="font-mono">0.1 ppm</td>
+                    <td><span class="indicator-pill indicator-green">Approved For Entry</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: AI Root Cause Incident Report Generator -->
+        <div class="space-y-4">
+          <div class="p-5 rounded-2xl glass-panel space-y-4">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i> AI Hazmat Incident Report Generator
+            </h3>
+            <p class="text-xs text-slate-400">Produces official OSHA 301 / EPA Title III compliant documentation with 1 click.</p>
+            
+            <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 space-y-1">
+              <p><strong>REPORT ID:</strong> CHM-2026-INC-089</p>
+              <p><strong>FACILITY:</strong> ChemSafe Complex Sector A</p>
+              <p><strong>AGENT:</strong> Liquefied Chlorine (UN 1017)</p>
+              <p><strong>SCRUBBER EFFICIENCY:</strong> 99.4% Captured</p>
+              <p><strong>CASUALTIES:</strong> 0 Fatalities | 12 Treated</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="window.print()" class="w-full py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg">
+                <i data-lucide="printer" class="w-4 h-4"></i> Print Report
+              </button>
+              <button onclick="downloadIncidentReport()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg">
+                <i data-lucide="download" class="w-4 h-4"></i> Download TXT
+              </button>
+            </div>
+          </div>
+
+          <!-- Community Hotline & Health Claims -->
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="life-buoy" class="w-4 h-4 text-emerald-400"></i> Community Public Relief Desk
+            </h3>
+            <p class="text-xs text-slate-400">Hotline for surrounding residential ward inquiries, claims, and medical follow-ups:</p>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+              <p class="font-bold text-white">Toll-Free Health Hotline:</p>
+              <p class="text-sky-400 font-mono text-sm mt-0.5">1-800-555-CHEMSAFE</p>
+              <p class="text-[10px] text-slate-400 mt-1">Walk-in Mobile Clinic: Stationed at Greenfield High Gym</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= SECTION: EMERGENCY RESPONSE MAP ================= -->
+    <section id="section-map" class="app-section hidden space-y-6">
+      
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl glass-panel">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2.5">
+            <i data-lucide="map-pin" class="w-6 h-6 text-amber-400"></i> Interactive Emergency Response Map & GIS
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">Real-time dynamic plume dispersion modeling, sensor nodes, wind vector, and community buffer wards.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- View Mode Toggle -->
+          <div class="bg-slate-900 p-1 rounded-xl border border-slate-700 flex items-center gap-1 text-xs">
+            <button id="btnViewSchematic" onclick="switchMapView('schematic')" class="px-3 py-1 rounded-lg font-bold bg-sky-600 text-white transition-all flex items-center gap-1.5">
+              <i data-lucide="layout" class="w-3.5 h-3.5"></i> Schematic
+            </button>
+            <button id="btnViewGis" onclick="switchMapView('gis')" class="px-3 py-1 rounded-lg font-bold text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+              <i data-lucide="globe" class="w-3.5 h-3.5"></i> Satellite GIS
+            </button>
+          </div>
+
+          <div id="mapWindDisplay" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-sky-300 font-mono font-bold">
+            SE (14 km/h)
+          </div>
+          <button onclick="renderInteractiveMap()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 border border-slate-700">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-sky-400"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Plume Dynamic Controls Bar -->
+      <div class="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div class="flex items-center gap-3">
+          <span class="font-bold text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="wind" class="w-4 h-4 text-sky-400"></i> Wind Direction:
+          </span>
+          <div class="flex items-center gap-1">
+            <button onclick="setWindDirection('NW', 315)" class="wind-dir-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">NW</button>
+            <button onclick="setWindDirection('N', 0)" class="wind-dir-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">N</button>
+            <button onclick="setWindDirection('NE', 45)" class="wind-dir-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">NE</button>
+            <button onclick="setWindDirection('E', 90)" class="wind-dir-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">E</button>
+            <button onclick="setWindDirection('SE', 135)" class="wind-dir-btn px-2 py-1 rounded bg-sky-600 text-white font-mono font-bold">SE</button>
+            <button onclick="setWindDirection('S', 180)" class="wind-dir-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">S</button>
+            <button onclick="setWindDirection('SW', 225)" class="wind-dir-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">SW</button>
+            <button onclick="setWindDirection('W', 270)" class="wind-dir-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono">W</button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span class="font-bold text-slate-300">Wind Velocity:</span>
+          <input id="sliderWindSpeed" type="range" min="5" max="50" value="14" oninput="setWindSpeed(this.value)" class="w-32 accent-sky-500 cursor-pointer" />
+          <span id="labelWindSpeed" class="font-mono text-sky-400 font-bold w-16">14 km/h</span>
+        </div>
+      </div>
+
+      <!-- Map Details HUD & Canvas / Leaflet GIS -->
+      <div class="p-5 rounded-2xl glass-panel space-y-4">
+        
+        <!-- Legend Bar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 p-3 rounded-xl border border-slate-800 text-xs">
+          <div class="flex flex-wrap items-center gap-4">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-600"></span> IDLH Lethal Zone (&gt;10 ppm)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span> Mandatory Evacuation Zone</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span> Upwind Safe Assembly Point</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-sky-400"></span> Fixed Gas Detector</span>
+          </div>
+          <span class="text-slate-400 text-[11px]">Dynamic ALOHA Dispersion Model</span>
+        </div>
+
+        <!-- Schematic Canvas View -->
+        <div id="containerSchematicMap" class="w-full rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative">
+          <canvas id="plantMapCanvasLarge" class="w-full h-[520px] block plant-map-canvas"></canvas>
+        </div>
+
+        <!-- Satellite GIS Tactical Map View (Leaflet) -->
+        <div id="containerGisMap" class="hidden w-full h-[520px] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl relative z-10">
+          <div id="leafletMapElement" class="w-full h-full"></div>
+        </div>
+
+        <!-- Instructions for Field Responders -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-xs">
+          <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <h4 class="font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i> Assembly Point 1 (NW Gate)
+            </h4>
+            <p class="text-slate-300 mt-1">Status: <strong class="text-emerald-400">100% CLEAR / UPWIND</strong>. Primary triage center and bus evacuation staging area.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <h4 class="font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="navigation" class="w-4 h-4 text-emerald-400"></i> Assembly Point 2 (North Gate)
+            </h4>
+            <p class="text-slate-300 mt-1">Status: <strong class="text-emerald-400">CLEAR</strong>. Level A suit donning staging location for Hazmat Unit 9.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <h4 class="font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i> Assembly Point 3 (SE Gate)
+            </h4>
+            <p class="text-slate-300 mt-1">Status: <strong class="text-rose-400">CLOSED / DOWNWIND HAZARD</strong>. Do not permit worker muster at this location.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= SECTION: CHEMICAL DATABASE ================= -->
+    <section id="section-chemicals" class="app-section hidden space-y-6">
+      
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl glass-panel">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+            <i data-lucide="flask-conical" class="w-6 h-6 text-purple-400"></i> Industrial Hazmat & Chemical Database
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1">NFPA 704 standard diamonds, IDLH toxic thresholds, vapor densities, and specific medical antidotes.</p>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative w-full sm:w-72">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-400"></i>
+          <input id="chemicalSearchInput" type="text" placeholder="Search by name, CAS, or formula..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500" />
+        </div>
+      </div>
+
+      <!-- Main Layout: Grid Cards + Selected Detail View -->
+      <div class="space-y-6">
+        <!-- Selected Chemical Detailed Card -->
+        <div id="chemicalDetailView">
+          <!-- Populated dynamically via selectChemical() -->
+        </div>
+
+        <!-- Directory of Chemical Cards -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">On-Site Regulated Chemicals</h3>
+          <div id="chemicalCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Populated via renderChemicalGrid() -->
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ================= SECTION: AI COPILOT ================= -->
+    <section id="section-ai-copilot" class="app-section hidden space-y-6">
+      
+      <div class="p-6 rounded-2xl glass-panel glass-panel-glow-blue space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+              <i data-lucide="bot" class="w-7 h-7"></i>
+            </div>
+            <div>
+              <h2 class="text-xl sm:text-2xl font-black text-white">ChemSafeAI Incident Safety Copilot</h2>
+              <p class="text-sm text-slate-400">Instant AI calculations for plume radius, neutralizing chemistry, medical triage guidance, and EAS alert wording.</p>
+            </div>
+          </div>
+          <span class="indicator-pill indicator-blue hidden sm:inline-flex">Model: Gemini Hazmat AI</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left 2 Cols: Interactive Chat Terminal -->
+        <div class="lg:col-span-2 p-5 rounded-2xl glass-panel flex flex-col h-[580px]">
+          
+          <!-- Chat Feed -->
+          <div id="aiChatFeed" class="flex-1 overflow-y-auto space-y-4 pr-2">
+            <!-- Initial Greeting -->
+            <div class="flex items-start gap-3">
+              <div class="w-7 h-7 rounded-full bg-emerald-500/30 flex items-center justify-center shrink-0 border border-emerald-400">
+                <i data-lucide="bot" class="w-4 h-4 text-emerald-300"></i>
+              </div>
+              <div class="bg-slate-800 border border-slate-700 text-slate-200 p-4 rounded-2xl rounded-tl-none max-w-[85%] text-xs shadow-xl leading-relaxed">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <span class="font-bold text-emerald-400">ChemSafeAI Copilot</span>
+                  <span class="indicator-pill indicator-blue">Online</span>
+                </div>
+                <p>Hello, Incident Commander. I am your specialized chemical emergency AI assistant. I have live access to plant telemetry, atmospheric wind vectors, and the NIOSH/DOT Hazmat database.</p>
+                <p class="mt-2 text-slate-300 font-medium">How can I assist your team right now? You can click the quick queries on the right or type any custom query below.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input Box -->
+          <div class="pt-4 border-t border-slate-800 mt-2">
+            <div class="flex items-center gap-2">
+              <input id="aiPromptInput" type="text" placeholder="Ask AI: e.g. What is the antidote for Chlorine? Or calculate evacuation radius..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-sky-500" />
+              <button id="btnSendAiPrompt" class="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md">
+                <span>Send</span> <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Col: Suggested Quick Prompts & AI Directives -->
+        <div class="space-y-4">
+          <div class="p-5 rounded-2xl glass-panel space-y-3">
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4 text-cyan-400"></i> Instant Scenario Queries
+            </h3>
+            <p class="text-xs text-slate-400">One-click queries tailored to chemical leakage emergencies:</p>
+
+            <div class="space-y-2">
+              <button data-prompt="Calculate safe evacuation radius for Chlorine tank leak with current 14 km/h SE wind" class="ai-quick-query w-full text-left p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-sky-500/50 text-xs text-slate-200 transition-all">
+                <span class="font-semibold text-sky-400">Calculate Evacuation Radius</span>
+                <p class="text-[11px] text-slate-400 mt-0.5">Determine initial isolation and downwind zone.</p>
+              </button>
+
+              <button data-prompt="What is the antidote and immediate first-aid for severe Chlorine gas inhalation?" class="ai-quick-query w-full text-left p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 text-xs text-slate-200 transition-all">
+                <span class="font-semibold text-emerald-400">Medical Antidote Guidelines</span>
+                <p class="text-[11px] text-slate-400 mt-0.5">First-aid, oxygen therapy & bronchodilators.</p>
+              </button>
+
+              <button data-prompt="How do we neutralize and contain 500 liters of Ammonia liquid and vapor?" class="ai-quick-query w-full text-left p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 text-xs text-slate-200 transition-all">
+                <span class="font-semibold text-amber-400">Neutralization Strategy</span>
+                <p class="text-[11px] text-slate-400 mt-0.5">Water fog application and chemical neutralizers.</p>
+              </button>
+
+              <button data-prompt="Draft community alert broadcast message for residential ward downwind of plant" class="ai-quick-query w-full text-left p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-rose-500/50 text-xs text-slate-200 transition-all">
+                <span class="font-semibold text-rose-400">Community EAS Alert Script</span>
+                <p class="text-[11px] text-slate-400 mt-0.5">Emergency broadcast warning for nearby schools & homes.</p>
+              </button>
+            </div>
+          </div>
+
+          <!-- AI Model Capabilities Info -->
+          <div class="p-5 rounded-2xl glass-panel space-y-2 text-xs">
+            <h4 class="font-bold text-white flex items-center gap-1.5">
+              <i data-lucide="shield" class="w-4 h-4 text-emerald-400"></i> Safety Validation Guardrails
+            </h4>
+            <p class="text-slate-400 text-[11px]">All AI generated containment strategies cross-reference standard NIOSH pocket manuals, DOT ERG 2024 protocols, and OSHA 29 CFR 1910 standards.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ================= SECTION: EMERGENCY CONTACTS ================= -->
+    <section id="section-contacts" class="app-section hidden space-y-6">
+      
+      <div class="p-6 rounded-2xl glass-panel glass-panel-glow-red space-y-2">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-xl bg-red-500/20 text-red-400 border border-red-500/30">
+            <i data-lucide="phone-call" class="w-7 h-7"></i>
+          </div>
+          <div>
+            <h2 class="text-xl sm:text-2xl font-black text-white">Emergency Services & Disaster Response Network</h2>
+            <p class="text-sm text-slate-400">Instant direct priority lines to Hazmat, Chemical Fire Response, Poison Control Centers, Trauma Hospitals, and Civil Defense.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Directory Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        
+        <!-- Hazmat Unit 9 -->
+        <div class="p-5 rounded-2xl border border-rose-900/50 bg-slate-900/90 shadow-xl space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="px-2 py-0.5 rounded bg-red-500/20 text-red-300 text-[10px] font-bold">HAZMAT LEVEL 3</span>
+              <h3 class="font-bold text-white text-base mt-1.5">Industrial Hazmat Unit 9</h3>
+              <p class="text-xs text-slate-400">Commander Sarah Vance | Heavy Decon Specialist</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center">
+              <i data-lucide="shield-alert" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="p-3 bg-slate-800/80 rounded-xl space-y-1 text-xs">
+            <p><span class="text-slate-400">Hotline:</span> <strong class="text-red-400 font-mono">1-800-424-9300 (CHEMTREC)</strong></p>
+            <p><span class="text-slate-400">Direct Radio:</span> <strong class="text-slate-200">VHF TAC-4 (154.280 MHz)</strong></p>
+            <p><span class="text-slate-400">Station ETA:</span> <strong class="text-emerald-400">4 - 7 mins</strong></p>
+          </div>
+          <button onclick="alert('DISPATCH CALL INITIATED: Contacting Commander Vance via CHEMTREC emergency trunk.')" class="w-full py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg">
+            <i data-lucide="phone-outgoing" class="w-4 h-4"></i> Dispatch Hazmat Unit
+          </button>
+        </div>
+
+        <!-- Chemical Fire & Rescue -->
+        <div class="p-5 rounded-2xl border border-amber-900/50 bg-slate-900/90 shadow-xl space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-bold">FIRE & RESCUE</span>
+              <h3 class="font-bold text-white text-base mt-1.5">Metropolitan Fire District 12</h3>
+              <p class="text-xs text-slate-400">Chief Marcus Brody | Chemical Foam Tender</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+              <i data-lucide="flame" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="p-3 bg-slate-800/80 rounded-xl space-y-1 text-xs">
+            <p><span class="text-slate-400">Hotline:</span> <strong class="text-amber-400 font-mono">911 / (555) 019-FIRE</strong></p>
+            <p><span class="text-slate-400">Direct Radio:</span> <strong class="text-slate-200">VHF Dispatch (154.190 MHz)</strong></p>
+            <p><span class="text-slate-400">Station ETA:</span> <strong class="text-emerald-400">5 - 8 mins</strong></p>
+          </div>
+          <button onclick="alert('FIRE DISPATCH: Engine 12 and Foam Tender dispatched to Sector A.')" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg">
+            <i data-lucide="phone-outgoing" class="w-4 h-4"></i> Call Fire Dispatch
+          </button>
+        </div>
+
+        <!-- Poison Control Center -->
+        <div class="p-5 rounded-2xl border border-emerald-900/50 bg-slate-900/90 shadow-xl space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">TOXICOLOGY</span>
+              <h3 class="font-bold text-white text-base mt-1.5">National Poison Control</h3>
+              <p class="text-xs text-slate-400">Dr. Elena Rostova | Tele-Toxicology</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <i data-lucide="cross" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="p-3 bg-slate-800/80 rounded-xl space-y-1 text-xs">
+            <p><span class="text-slate-400">24/7 Line:</span> <strong class="text-emerald-400 font-mono">1-800-222-1222</strong></p>
+            <p><span class="text-slate-400">Direct Landline:</span> <strong class="text-slate-200">Ext. 8844</strong></p>
+            <p><span class="text-slate-400">Consultation:</span> <strong class="text-emerald-400">Immediate 24/7</strong></p>
+          </div>
+          <button onclick="alert('POISON CENTER: Connecting to Medical Toxicologist Dr. Rostova...')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg">
+            <i data-lucide="phone-outgoing" class="w-4 h-4"></i> Call Poison Hotline
+          </button>
+        </div>
+
+        <!-- Trauma & Burns Hospital -->
+        <div class="p-5 rounded-2xl border border-sky-900/50 bg-slate-900/90 shadow-xl space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 text-[10px] font-bold">REGIONAL HOSPITAL</span>
+              <h3 class="font-bold text-white text-base mt-1.5">St. Jude Trauma & Burns Center</h3>
+              <p class="text-xs text-slate-400">Dr. David Chen | ER Director</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center">
+              <i data-lucide="hospital" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="p-3 bg-slate-800/80 rounded-xl space-y-1 text-xs">
+            <p><span class="text-slate-400">ER Hotline:</span> <strong class="text-sky-400 font-mono">(555) 019-8700</strong></p>
+            <p><span class="text-slate-400">HEAR Radio:</span> <strong class="text-slate-200">155.340 MHz</strong></p>
+            <p><span class="text-slate-400">Status:</span> <strong class="text-emerald-400">14 Decon Bays Ready</strong></p>
+          </div>
+          <button onclick="alert('HOSPITAL ALERT: Mass Casualty Decontamination Protocol signaled to St. Jude ER.')" class="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg">
+            <i data-lucide="phone-outgoing" class="w-4 h-4"></i> Alert ER Trauma
+          </button>
+        </div>
+
+        <!-- Municipal EMA Civil Defense -->
+        <div class="p-5 rounded-2xl border border-purple-900/50 bg-slate-900/90 shadow-xl space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold">CIVIL DEFENSE</span>
+              <h3 class="font-bold text-white text-base mt-1.5">Municipal Emergency Agency</h3>
+              <p class="text-xs text-slate-400">Director Raymond Ortiz | Public Alerts</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+              <i data-lucide="megaphone" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="p-3 bg-slate-800/80 rounded-xl space-y-1 text-xs">
+            <p><span class="text-slate-400">Disaster Desk:</span> <strong class="text-purple-400 font-mono">(555) 019-3322</strong></p>
+            <p><span class="text-slate-400">EAS Uplink:</span> <strong class="text-slate-200">Satellite Channel 1</strong></p>
+            <p><span class="text-slate-400">Action:</span> <strong class="text-emerald-400">WEA Siren Triggers</strong></p>
+          </div>
+          <button onclick="alert('CIVIL DEFENSE: EAS uplink connected for residential ward notification.')" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg">
+            <i data-lucide="phone-outgoing" class="w-4 h-4"></i> Notify EMA Director
+          </button>
+        </div>
+
+        <!-- Plant Chief Safety Officer -->
+        <div class="p-5 rounded-2xl border border-slate-700 bg-slate-900/90 shadow-xl space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="px-2 py-0.5 rounded bg-slate-700 text-slate-300 text-[10px] font-bold">PLANT COMMAND</span>
+              <h3 class="font-bold text-white text-base mt-1.5">Chief Safety Officer (CSO)</h3>
+              <p class="text-xs text-slate-400">Evelyn Reed, CSP | On-Site Incident Leader</p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-slate-800 text-slate-300 flex items-center justify-center">
+              <i data-lucide="radio-tower" class="w-5 h-5"></i>
+            </div>
+          </div>
+          <div class="p-3 bg-slate-800/80 rounded-xl space-y-1 text-xs">
+            <p><span class="text-slate-400">Command Phone:</span> <strong class="text-slate-200 font-mono">(555) 019-9000</strong></p>
+            <p><span class="text-slate-400">Internal Ext:</span> <strong class="text-slate-200">Ext. 1000 (Priority)</strong></p>
+            <p><span class="text-slate-400">Location:</span> <strong class="text-emerald-400">Bldg C Bunker</strong></p>
+          </div>
+          <button onclick="alert('CSO DIRECT LINE: Ringing Evelyn Reed at Emergency War Room...')" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg">
+            <i data-lucide="phone-outgoing" class="w-4 h-4"></i> Call CSO War Room
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= ONE-CLICK SOS CONFIRMATION MODAL ================= -->
+  <div id="sosModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="max-w-md w-full bg-slate-900 border-2 border-red-500 rounded-3xl p-6 shadow-2xl space-y-5 text-center">
+      
+      <div class="w-16 h-16 rounded-2xl bg-red-600/20 border border-red-500/40 text-red-500 flex items-center justify-center mx-auto animate-emergency-pulse">
+        <i data-lucide="siren" class="w-9 h-9 animate-bounce"></i>
+      </div>
+
+      <div>
+        <h3 class="text-xl font-black text-white tracking-wide uppercase">Trigger Chemical SOS Emergency?</h3>
+        <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+          This initiates the full plant-wide Hazmat Level 3 alert: sounding industrial emergency sirens, initiating automatic scrubber blowers, calculating real-time plume dispersion, and dispatching Municipal Hazmat Response Unit 9.
+        </p>
+      </div>
+
+      <div class="p-3 rounded-xl bg-red-950/40 border border-red-900/50 text-[11px] text-red-300 text-left space-y-1">
+        <p>• Emergency Siren will sound via audio synthesizer.</p>
+        <p>• Evacuation order signaled to all 142 shift workers.</p>
+        <p>• EAS alert broadcast draft generated for residential wards.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button id="cancelSosModal" class="py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs border border-slate-700">
+          Cancel / Stand Down
+        </button>
+        <button id="confirmSosAction" class="py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs shadow-lg shadow-red-600/40 uppercase tracking-wider animate-pulse">
+          Yes, Trigger SOS
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="font-bold text-slate-300">ChemSafeAI Industrial Safety System</span>
+        <span>— Real-Time Leak Prevention & Community Protection</span>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400 text-[11px]">
+        <span>OSHA 1910.119 Compliant</span>
+        <span>•</span>
+        <span>DOT ERG 2024 Guidelines</span>
+        <span>•</span>
+        <span>NIOSH Pocket Standard</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="chemicals.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
